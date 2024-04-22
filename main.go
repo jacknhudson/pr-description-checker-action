@@ -110,7 +110,7 @@ func main() {
 	var errorMsg string
 	if len(description) == 0 {
 		errorMsg = cfg.commentEmptyDescription
-	} else if len(description) == len(template) {
+	} else if description == template {
 		errorMsg = cfg.commentTemplateNotFilled
 	}
 
