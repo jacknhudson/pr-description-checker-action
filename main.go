@@ -36,7 +36,11 @@ func generateConfig() *config {
 	cfg.githubToken = githubactions.GetInput("repo-token")
 	cfg.templatePath = githubactions.GetInput("template-path")
 	cfg.exemptLabels = strings.Split(githubactions.GetInput("exempt-labels"), ",")
-	cfg.comment, _ = strconv.ParseBool(githubactions.GetInput("comment"))
+	cfg.comment, err := strconv.ParseBool(githubactions.GetInput("comment"))
+	if err != nil {
+		githubactions.Fatalf("Failed to parse 'comment' input: %s", err)
+	}
+
 	cfg.commentEmptyDescription = githubactions.GetInput("comment-empty-description")
 	cfg.commentTemplateNotFilled = githubactions.GetInput("comment-template-not-filled")
 	cfg.commentGithubToken = githubactions.GetInput("comment-github-token")
@@ -84,12 +88,15 @@ func main() {
 	template = normalizeDescription(template)
 
 	if err != nil {
-		githubactions.Infof("Failed to fetch template: %s, will continue without template", err)
+		githubactions.Fatalf("Failed to fetch template: %s", err)
 	}
 
 	githubClient := newGithubClient(cfg.githubToken)
 
-	pr, _, _ := githubClient.PullRequests.Get(context.Background(), cfg.repoOwner, cfg.repoName, cfg.prNumber)
+	pr, _, err := githubClient.PullRequests.Get(context.Background(), cfg.repoOwner, cfg.repoName, cfg.prNumber)
+	if err != nil {
+		githubactions.Fatalf("Failed to fetch PR: %s", err)
+	}
 
 	skipCheck := false
 	for _, label := range pr.Labels {
